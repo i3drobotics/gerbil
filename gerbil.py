@@ -33,7 +33,12 @@ from queue import Queue
 from .interface import Interface
 from .callbackloghandler import CallbackLogHandler
 
-from gcode_machine.gcode_machine import GcodeMachine
+if __package__ == 'system_controller.gerbil':
+    # run from app.py
+    from ..gcode_machine.gcode_machine import GcodeMachine
+else:
+    # uses current package visibility
+    from gcode_machine.gcode_machine import GcodeMachine
 
 class Gerbil:
     """ A universal Grbl CNC firmware interface module for Python3
@@ -488,7 +493,12 @@ class Gerbil:
         Immediately send the homing command ($H) to Grbl.
         """
         self._iface_write("$H\n")
-        
+
+    def check(self):
+        """
+        Immediately send the check command ($C) to Grbl.
+        """
+        self._iface_write("$C\n")
         
     def poll_start(self):
         """
@@ -609,6 +619,10 @@ class Gerbil:
         if self.cmode == "Hold":
             self.logger.error("Grbl is in HOLD state. Will not send {}.".format(line))
             return
+
+        # if self.cmode == "Check":
+        #     self.logger.error("Grbl is in Check state. GCODE will be processed but motors will not move {}.".format(line))
+        #     return
         
         if "$#" in line:
             # The PRB response is sent for $# as well as when probing.
